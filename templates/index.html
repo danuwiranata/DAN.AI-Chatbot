@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot FAQ</title>
+  <style>
+    body {
+      margin:0; padding:0;
+      font-family: Arial, sans-serif;
+      background:#343541; color:#ececec;
+    }
+    header {
+      background:#202123; color:#fff;
+      padding:15px 20px;
+      font-size:20px; font-weight:bold;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .toggle-btn {
+      background:#444654; color:#fff;
+      border:none; padding:8px 15px;
+      border-radius:5px; cursor:pointer;
+    }
+    .container { display:flex; height:calc(100vh - 50px); }
+    .sidebar {
+      width:250px; background:#202123;
+      color:#fff; padding:20px;
+      display:flex; flex-direction:column;
+    }
+    .sidebar h2 { font-size:18px; margin-bottom:10px; }
+    .chat-section {
+      flex:1; display:flex; flex-direction:column;
+      background:#343541;
+    }
+    .chat-window {
+      flex:1; overflow-y:auto; padding:20px;
+    }
+    .message {
+      margin-bottom:15px; max-width:70%;
+      padding:10px 15px; border-radius:10px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .user { background:#007bff; color:#fff; margin-left:auto; }
+    .bot { background:#444654; color:#fff; margin-right:auto; }
+    .input-bar {
+      display:flex; padding:15px;
+      background:#202123; border-top:1px solid #555;
+    }
+    .input-bar input[type="text"] {
+      flex:1; padding:10px;
+      border:1px solid #555;
+      border-radius:5px;
+      background:#444654; color:#fff;
+    }
+    .input-bar button {
+      margin-left:10px; padding:10px 20px;
+      border:none; background:#007bff;
+      color:#fff; border-radius:5px; cursor:pointer;
+    }
+    .input-bar button:hover { background:#0060d6; }
+    img.generated-img {
+      margin-top:10px; border-radius:10px; max-width:300px;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    .light-mode {
+      background:#f5f5f5; color:#333;
+    }
+    .light-mode header { background:#ececec; color:#000; }
+    .light-mode .sidebar { background:#fff; color:#000; }
+    .light-mode .chat-section { background:#f5f5f5; }
+    .light-mode .input-bar { background:#ececec; }
+    .light-mode .bot { background:#ddd; color:#000; }
+    .light-mode .user { background:#007bff; color:#fff; }
+    .light-mode .input-bar input[type="text"] { background:#fff; color:#000; border:1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <header>
+    DANU AICHATBOT
+    <button class="toggle-btn" id="toggleMode">🌙 Mode</button>
+  </header>
+  <div class="container">
+    <div class="sidebar">
+      <h2>Menu</h2>
+      <p>• Chat FAQ</p>
+      <!-- <p>• Voice Input</p>
+      <p>• Image Generator</p> -->
+    </div>
+    <div class="chat-section">
+      <div class="chat-window" id="chatWindow">
+        <!-- Chat messages muncul di sini -->
+      </div>
+      <div class="input-bar">
+        <input type="text" id="question" placeholder="Tanyakan sesuatu..." />
+        <input type="text" id="image_prompt" placeholder="Prompt gambar (opsional)" style="margin-left:5px;" />
+        <button id="sendBtn">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('sendBtn').onclick = async function () {
+      const question = document.getElementById('question').value;
+      const imagePrompt = document.getElementById('image_prompt').value;
+      if (!question) return;
+      
+      addMessage(question, 'user');
+      document.getElementById('question').value = '';
+
+      let formData = new FormData();
+      formData.append("question", question);
+      formData.append("image_prompt", imagePrompt);
+
+      let res = await fetch("/ask", { method: "POST", body: formData });
+      let data = await res.json();
+
+      let botReply = data.jawaban;
+      addMessage(botReply, 'bot');
+
+      if (data.img_url) {
+        addImage(data.img_url);
+      }
+    }
+
+    function addMessage(text, sender) {
+      const chatWindow = document.getElementById('chatWindow');
+      const div = document.createElement('div');
+      div.className = 'message ' + sender;
+      div.textContent = text;
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function addImage(url) {
+      const chatWindow = document.getElementById('chatWindow');
+      const img = document.createElement('img');
+      img.className = 'generated-img';
+      img.src = url;
+      chatWindow.appendChild(img);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Toggle Dark/Light Mode
+    document.getElementById('toggleMode').onclick = function() {
+      document.body.classList.toggle('light-mode');
+      this.textContent = document.body.classList.contains('light-mode') ? "☀️ Mode" : "🌙 Mode";
+    }
+  </script>
+</body>
+</html>
